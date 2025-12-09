@@ -55,19 +55,19 @@ function createSpotLight(scene: Scene) {
   return light;
 }
 
-// --- тени от PointLight: более мягкие, менее тёмные ---
+
 function createPointShadows(light: PointLight, meshes: Mesh[]) {
   const shadower = new ShadowGenerator(1024, light);
   const sm: any = shadower.getShadowMap();
 
-  // все фигуры кидают тени
+  
   for (let m of meshes) {
     if (m) {
       sm.renderList.push(m);
     }
   }
 
-  shadower.setDarkness(0.25);                // мягкие
+  shadower.setDarkness(0.25);                
   shadower.useBlurExponentialShadowMap = true;
   shadower.blurScale = 4;
   shadower.blurBoxOffset = 1;
@@ -78,7 +78,7 @@ function createPointShadows(light: PointLight, meshes: Mesh[]) {
   return shadower;
 }
 
-// --- тени от DirectionalLight: более насыщенные ---
+
 function createDirectionalShadows(light: DirectionalLight, meshes: Mesh[]) {
   const shadower = new ShadowGenerator(1024, light);
   const sm: any = shadower.getShadowMap();
@@ -89,7 +89,7 @@ function createDirectionalShadows(light: DirectionalLight, meshes: Mesh[]) {
     }
   }
 
-  shadower.setDarkness(0.6);                 // заметно темнее
+  shadower.setDarkness(1.0);                
   shadower.useBlurExponentialShadowMap = true;
   shadower.blurScale = 4;
   shadower.blurBoxOffset = 1;
@@ -170,7 +170,7 @@ function createGround(scene: Scene) {
   groundMaterial.backFaceCulling = false;
   groundMaterial.diffuseColor = new Color3(1, 0, 0);
   ground.material = groundMaterial;
-  ground.receiveShadows = true;   // обязательно, чтобы видеть тени
+  ground.receiveShadows = true;   
   return ground;
 }
 
@@ -211,7 +211,7 @@ export default function createStartScene(engine: Engine) {
   }
 
   let that: SceneData = { scene: new Scene(engine) };
-  //that.scene.debugLayer.show();
+  
 
   const mat1 = getMaterial(that.scene);
   that.hemi = createHemisphericLight(that.scene);
@@ -228,7 +228,7 @@ export default function createStartScene(engine: Engine) {
   that.ground = createGround(that.scene);
   that.camera = createArcRotateCamera(that.scene);
 
-  // массив всех фигур, которые должны кидать тени
+  
   const allMeshes: Mesh[] = [];
   if (that.box) allMeshes.push(that.box);
   if (that.sphere) allMeshes.push(that.sphere);
@@ -237,12 +237,12 @@ export default function createStartScene(engine: Engine) {
   if (that.triangle) allMeshes.push(that.triangle);
   if (that.capsule) allMeshes.push(that.capsule);
 
-  // тени от pointLight (мягкие)
+  
   if (that.pointLight) {
     createPointShadows(that.pointLight, allMeshes);
   }
 
-  // тени от directionalLight (более тёмные)
+  
   if (that.dlLight) {
     createDirectionalShadows(that.dlLight, allMeshes);
   }
