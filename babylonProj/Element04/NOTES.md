@@ -1,0 +1,1 @@
+This scene implements a basic character control system using keyboard input. The player character is placed on the first wooden platform and can move freely across two platforms connected by a bridge. Movement is controlled using the W, A, S, D keys or the arrow keys, with a reduced movement speed for smoother navigation.
