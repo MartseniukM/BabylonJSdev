@@ -29,8 +29,7 @@ export default function createRunScene(runScene: SceneData) {
     0.1
   );
 
-  // музыка по умолчанию выключена (включится по M)
-  runScene.audio.stop();
+  // музыку теперь НЕ останавливаем, она сама включится после клика
 
   runScene.scene.onBeforeRenderObservable.add(() => {
     // --- переключение музыки по M ---
@@ -47,26 +46,27 @@ export default function createRunScene(runScene: SceneData) {
     runScene.player.then((result) => {
       const character: AbstractMesh = result!.meshes[0];
 
+      // скорость 0.05 (в 2 раза меньше, чем 0.1)
       if (keyDownMap["w"] || keyDownMap["ArrowUp"]) {
-        character.position.x -= 0.1;
+        character.position.x -= 0.05;
         character.rotation.y = (3 * Math.PI) / 2;
       }
       if (keyDownMap["a"] || keyDownMap["ArrowLeft"]) {
-        character.position.z -= 0.1;
+        character.position.z -= 0.05;
         character.rotation.y = Math.PI;
       }
       if (keyDownMap["s"] || keyDownMap["ArrowDown"]) {
-        character.position.x += 0.1;
+        character.position.x += 0.05;
         character.rotation.y = Math.PI / 2;
       }
       if (keyDownMap["d"] || keyDownMap["ArrowRight"]) {
-        character.position.z += 0.1;
+        character.position.z += 0.05;
         character.rotation.y = 0;
       }
     });
   });
 
   runScene.scene.onAfterRenderObservable.add(() => {
-    // сюда можно потом добавить анимации/эффекты
+    // сюда можно будет потом добавить эффекты
   });
 }

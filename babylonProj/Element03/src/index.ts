@@ -3,18 +3,17 @@ import createStartScene from "./createStartScene";
 import createRunScene from "./createRunScene";
 import "./main.css";
 
-const CanvasName = "renderCanvas";
+// берём canvas из HTML
+const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 
-let canvas = document.createElement("canvas");
-canvas.id = CanvasName;
-
-canvas.classList.add("background-canvas");
-document.body.appendChild(canvas);
-
-let eng = new Engine(canvas, true, {}, true);
-let startScene = createStartScene(eng);
+const eng = new Engine(canvas, true, {}, true);
+const startScene = createStartScene(eng);
 createRunScene(startScene);
 
 eng.runRenderLoop(() => {
   startScene.scene.render();
+});
+
+window.addEventListener("resize", () => {
+  eng.resize();
 });

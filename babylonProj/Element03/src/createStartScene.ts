@@ -15,8 +15,11 @@ import {
   AbstractMesh,
   ISceneLoaderAsyncResult,
   Sound,
+  DirectionalLight,
+  ShadowGenerator,
 } from "@babylonjs/core";
 
+// ---------- МУЗЫКА ----------
 function backgroundMusic(scene: Scene): Sound {
   const music = new Sound(
     "music",
@@ -25,37 +28,32 @@ function backgroundMusic(scene: Scene): Sound {
     null,
     {
       loop: true,
-      autoplay: true,
+      autoplay: false, // запустим сами после первого клика
+      volume: 1,
     }
   );
 
-  // В Babylon 8 audioEngine может быть ещё не создан.
-  // Делаем проверки, чтобы не было ошибки.
-  if (Engine.audioEngine) {
-    Engine.audioEngine.useCustomUnlockedButton = true;
-
-    window.addEventListener(
-      "click",
-      () => {
-        if (Engine.audioEngine && !Engine.audioEngine.unlocked) {
-          Engine.audioEngine.unlock();
-        }
-      },
-      { once: true }
-    );
-  }
+  // после ПЕРВОГО клика по окну — включаем музыку
+  window.addEventListener(
+    "pointerdown",
+    () => {
+      if (!music.isPlaying) {
+        music.play();
+      }
+    },
+    { once: true }
+  );
 
   return music;
 }
 
-
-// ---------------- ИГРОК ----------------
+// ---------- ИГРОК ----------
 function importPlayer(scene: Scene, x: number, z: number) {
   const item: Promise<void | ISceneLoaderAsyncResult> =
     SceneLoader.ImportMeshAsync(
       "",
-      "./assets/models/men/", // папка: assets/models/men
-      "dummy3.babylon",       // файл: dummy3.babylon
+      "./assets/models/men/",
+      "dummy3.babylon",
       scene
     );
 
@@ -71,7 +69,7 @@ function importPlayer(scene: Scene, x: number, z: number) {
   return item;
 }
 
-// ---------------- ПОЛ ----------------
+// ---------- ДВЕ ПЛАТФОРМЫ + МОСТ ----------
 function createGround(scene: Scene) {
   const groundMaterial = new StandardMaterial("groundMaterial", scene);
   const groundTexture = new Texture("./assets/textures/wood.jpg", scene);
@@ -83,17 +81,40 @@ function createGround(scene: Scene) {
   groundMaterial.diffuseTexture.hasAlpha = true;
   groundMaterial.backFaceCulling = false;
 
-  const ground = MeshBuilder.CreateGround(
-    "ground",
+  // левая платформа
+  const ground1 = MeshBuilder.CreateGround(
+    "ground1",
     { width: 15, height: 15, subdivisions: 4 },
     scene
   );
+  ground1.material = groundMaterial;
+  ground1.position.x = -10;
 
-  ground.material = groundMaterial;
-  return ground;
+  // правая платформа — клон
+  const ground2 = ground1.clone("ground2") as Mesh;
+  ground2.position.x = 10;
+
+  // мост между платформами
+  const bridgeMat = new StandardMaterial("bridgeMat", scene);
+  bridgeMat.diffuseColor = new Color3(0.4, 0.25, 0.1); // коричневый
+
+  const bridge = MeshBuilder.CreateBox(
+    "bridge",
+    {
+      width: 10,   // длина по X (между островами)
+      height: 0.3, // толщина
+      depth: 4,    // ширина по Z
+    },
+    scene
+  );
+  bridge.material = bridgeMat;
+  bridge.position.set(0, 0.15, 0);
+
+  // в SceneData ground один — вернём левую платформу
+  return ground1;
 }
 
-// ---------------- СВЕТ ----------------
+// ---------- СВЕТ ----------
 function createHemisphericLight(scene: Scene) {
   const light = new HemisphericLight(
     "light",
@@ -107,12 +128,23 @@ function createHemisphericLight(scene: Scene) {
   return light;
 }
 
-// ---------------- КАМЕРА ----------------
+function createSunLight(scene: Scene) {
+  const sun = new DirectionalLight(
+    "sunLight",
+    new Vector3(-1, -2, -1),
+    scene
+  );
+  sun.position = new Vector3(0, 10, 0);
+  sun.intensity = 1.0;
+  return sun;
+}
+
+// ---------- КАМЕРА ----------
 function createArcRotateCamera(scene: Scene) {
-  let camAlpha = -Math.PI / 2;
-  let camBeta = Math.PI / 2.5;
-  let camDist = 15;
-  let camTarget = new Vector3(0, 0, 0);
+  const camAlpha = -Math.PI / 2;
+  const camBeta = Math.PI / 2.5;
+  const camDist = 25;
+  const camTarget = new Vector3(0, 0, 0);
 
   const camera = new ArcRotateCamera(
     "camera1",
@@ -129,22 +161,49 @@ function createArcRotateCamera(scene: Scene) {
   camera.lowerBetaLimit = 0;
   camera.upperBetaLimit = Math.PI / 2.02;
 
-  // важный момент: для Element 3 в примере камеру обычно НЕ привязывают,
-  // чтобы стрелки не двигали камеру. Можно закомментировать.
+  // стрелками управляем персонажем, а не камерой
   // camera.attachControl(true);
 
   return camera;
 }
 
-// ---------------- СОЗДАНИЕ СЦЕНЫ ----------------
+// ---------- СОЗДАНИЕ СЦЕНЫ ----------
 export default function createStartScene(engine: Engine): SceneData {
   const scene = new Scene(engine);
 
   const ground = createGround(scene);
   const lightHemispheric = createHemisphericLight(scene);
+  const sunLight = createSunLight(scene);
   const camera = createArcRotateCamera(scene);
   const audio = backgroundMusic(scene);
-  const player = importPlayer(scene, 0, 0); // спавним в центре
+
+  // спавним игрока на левой платформе
+  const player = importPlayer(scene, -10, 0);
+
+  // -------- ТЕНИ --------
+  const shadowGenerator = new ShadowGenerator(2048, sunLight);
+  shadowGenerator.useBlurExponentialShadowMap = true;
+  shadowGenerator.blurKernel = 64;
+  shadowGenerator.darkness = 0.7; // насыщённые тени
+
+  // когда модель загрузится — добавим её как источник тени
+  player.then((result) => {
+    const character = result!.meshes[0] as AbstractMesh;
+    shadowGenerator.addShadowCaster(character, true);
+  });
+
+  // земля принимает тени
+  ground.receiveShadows = true;
+
+  const ground2 = scene.getMeshByName("ground2");
+  if (ground2) {
+    ground2.receiveShadows = true;
+  }
+
+  const bridge = scene.getMeshByName("bridge");
+  if (bridge) {
+    bridge.receiveShadows = true;
+  }
 
   const that: SceneData = {
     scene,
