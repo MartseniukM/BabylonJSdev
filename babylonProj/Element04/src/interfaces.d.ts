@@ -10,15 +10,9 @@ export interface SceneData {
   light?: HemisphericLight;
   camera?: Camera;
 
-  // Одна "главная" платформа (можно использовать как ground по заданию)
-  ground?: PhysicsAggregate;
-
-  // Все три дорожки
-  grounds?: PhysicsAggregate[];
-
-  // Три шара боулинга
-  balls?: PhysicsAggregate[];
-
-  // Все кегли
-  pins?: PhysicsAggregate[];
+  // Основные физические элементы
+  ground?: PhysicsAggregate;          // можно использовать как "центральную" платформу
+  grounds?: PhysicsAggregate[];       // все платформы (3 дорожки)
+  balls?: PhysicsAggregate[];         // три шара
+  pins?: PhysicsAggregate[];          // все кегли
 }
