@@ -8,9 +8,17 @@ import {
 export interface SceneData {
   scene: Scene;
   light?: HemisphericLight;
-  ground?: PhysicsAggregate;
   camera?: Camera;
 
-  balls?: PhysicsAggregate[];      // три шара
-  pins?: PhysicsAggregate[];       // все кегли
+  // Одна "главная" платформа (можно использовать как ground по заданию)
+  ground?: PhysicsAggregate;
+
+  // Все три дорожки
+  grounds?: PhysicsAggregate[];
+
+  // Три шара боулинга
+  balls?: PhysicsAggregate[];
+
+  // Все кегли
+  pins?: PhysicsAggregate[];
 }

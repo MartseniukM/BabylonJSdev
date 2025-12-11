@@ -1,3 +1,4 @@
+// createCharacterController.ts
 import "@babylonjs/loaders/glTF/2.0";
 
 import {
@@ -10,51 +11,128 @@ import {
   KeyboardEventTypes,
   StandardMaterial,
   Color3,
+  SceneLoader,
+  AbstractMesh,
+  AnimationGroup,
 } from "@babylonjs/core";
 
 export function createCharacterController(scene: Scene) {
-  // Character state machine
+  // ---------- СОСТОЯНИЕ ПЕРСОНАЖА ----------
   let characterState = "ON_GROUND";
   const inAirSpeed = 8.0;
   const onGroundSpeed = 10;
   const jumpHeight = 1.5;
   const characterGravity = new Vector3(0, -18, 0);
-  
-  // Input tracking
+
+  // ввод
   let keyInput = new Vector3(0, 0, 0);
   let wantJump = false;
-  
-  // Character orientation
+
+  // ориентация
   let characterOrientation = Quaternion.Identity();
   let forwardLocalSpace = new Vector3(0, 0, 1);
 
-  // Create visual capsule mesh
+  // ---------- ВИЗУАЛЬНАЯ КАПСУЛА ----------
   const h = 1.8;
   const r = 0.6;
-  let displayCapsule = MeshBuilder.CreateCapsule(
+
+  const displayCapsule = MeshBuilder.CreateCapsule(
     "CharacterDisplay",
     { height: h, radius: r },
     scene
   );
   displayCapsule.position = new Vector3(0, h / 2, 0);
-  
-  // Apply material for visibility
+
   const capsuleMat = new StandardMaterial("capsuleMat", scene);
   capsuleMat.diffuseColor = new Color3(0.8, 0.2, 0.2);
   capsuleMat.emissiveColor = new Color3(0.3, 0.1, 0.1);
   displayCapsule.material = capsuleMat;
-  
-  // Debug: log initial position
+
   console.log("Capsule initial position:", displayCapsule.position);
 
-  // Create physics character controller
-  let characterController = new PhysicsCharacterController(
+  // ---------- АНИМАЦИИ ФЕРМЕРА ----------
+  let idleAnim: AnimationGroup | null = null;
+  let walkAnim: AnimationGroup | null = null;
+  let isMoving = false;
+
+  const updateAnimation = () => {
+    if (!idleAnim && !walkAnim) return;
+
+    const wantMove = keyInput.x !== 0 || keyInput.z !== 0;
+    if (wantMove === isMoving) return;
+
+    isMoving = wantMove;
+
+    if (isMoving) {
+      if (idleAnim) idleAnim.stop();
+      if (walkAnim) walkAnim.play(true);
+    } else {
+      if (walkAnim) walkAnim.stop();
+      if (idleAnim) idleAnim.play(true);
+    }
+  };
+
+  // ---------- ПОВОРОТ ПО НАПРАВЛЕНИЮ ДВИЖЕНИЯ ----------
+  const updateFacingFromInput = () => {
+    if (keyInput.x === 0 && keyInput.z === 0) return;
+
+    // угол: X — вбок, Z — вперёд/назад
+    const angle = Math.atan2(keyInput.x, keyInput.z); // радианы
+    const q = Quaternion.FromEulerAngles(0, angle, 0);
+
+    characterOrientation = q;
+    displayCapsule.rotationQuaternion = q;
+  };
+
+  // ---------- ПОДГРУЖАЕМ ФЕРМЕРА ----------
+  SceneLoader.ImportMeshAsync("", "./assets/men/", "Farmer.gltf", scene)
+    .then((result) => {
+      console.log("Farmer loaded, meshes:", result.meshes);
+
+      const farmerRoot = result.meshes[0] as AbstractMesh;
+
+      farmerRoot.parent = displayCapsule;
+      farmerRoot.position = new Vector3(0, -0.9, 0);
+      farmerRoot.scaling = new Vector3(1.4, 1.4, 1.4);
+      farmerRoot.rotationQuaternion = Quaternion.Identity();
+
+      const groups = result.animationGroups;
+
+      if (groups && groups.length > 0) {
+        idleAnim =
+          groups.find((g) =>
+            g.name.toLowerCase().includes("idle")
+          ) || groups[0];
+
+        walkAnim =
+          groups.find((g) => {
+            const n = g.name.toLowerCase();
+            return n.includes("walk") || n.includes("run");
+          }) || groups[1] || null;
+
+        if (idleAnim) {
+          idleAnim.play(true);
+        }
+      }
+
+      displayCapsule.visibility = 0;
+
+      console.log(
+        "Farmer attached to capsule. Animations:",
+        groups?.map((g) => g.name)
+      );
+    })
+    .catch((err) => {
+      console.error("Failed to load Farmer.gltf", err);
+    });
+
+  // ---------- PHYSICS CHARACTER CONTROLLER ----------
+  const characterController = new PhysicsCharacterController(
     displayCapsule.position.clone(),
     { capsuleHeight: h, capsuleRadius: r },
     scene
   );
 
-  // Compute desired velocity based on input and state
   const getDesiredVelocity = function (
     deltaTime: number,
     supportInfo: {
@@ -64,28 +142,35 @@ export function createCharacterController(scene: Scene) {
     },
     currentVelocity: Vector3
   ): Vector3 {
-    // Update state
-    if (characterState === "ON_GROUND" && supportInfo.supportedState !== CharacterSupportedState.SUPPORTED) {
+    // --- обновляем состояние (как раньше) ---
+    if (
+      characterState === "ON_GROUND" &&
+      supportInfo.supportedState !== CharacterSupportedState.SUPPORTED
+    ) {
       characterState = "IN_AIR";
-    } else if (characterState === "IN_AIR" && supportInfo.supportedState === CharacterSupportedState.SUPPORTED) {
+    } else if (
+      characterState === "IN_AIR" &&
+      supportInfo.supportedState === CharacterSupportedState.SUPPORTED
+    ) {
       characterState = "ON_GROUND";
     }
 
-    // Check for jump transition
+    // прыжок
     if (characterState === "ON_GROUND" && wantJump) {
       characterState = "START_JUMP";
     } else if (characterState === "START_JUMP") {
       characterState = "IN_AIR";
     }
 
-    let upWorld = characterGravity.normalizeToNew();
-    upWorld.scaleInPlace(-1.0);
-    let forwardWorld = forwardLocalSpace.applyRotationQuaternion(characterOrientation);
+    // мировой «верх» и «вперёд»
+    const upWorld = characterGravity.normalizeToNew().scale(-1.0);
+    const forwardWorld = new Vector3(0, 0, 1); // просто ось Z
 
+    // ---------- В ВОЗДУХЕ ----------
     if (characterState === "IN_AIR") {
-      let desiredVelocity = keyInput
-        .scale(inAirSpeed)
-        .applyRotationQuaternion(characterOrientation);
+      // Больше НЕ крутим вектор скоростью по ориентации
+      const desiredVelocity = keyInput.scale(inAirSpeed);
+
       let outputVelocity = characterController.calculateMovement(
         deltaTime,
         forwardWorld,
@@ -95,15 +180,18 @@ export function createCharacterController(scene: Scene) {
         desiredVelocity,
         upWorld
       );
-      // Restore vertical component and apply gravity
+
+      // сохраняем вертикальную составляющую и добавляем гравитацию
       outputVelocity.addInPlace(upWorld.scale(-outputVelocity.dot(upWorld)));
       outputVelocity.addInPlace(upWorld.scale(currentVelocity.dot(upWorld)));
       outputVelocity.addInPlace(characterGravity.scale(deltaTime));
       return outputVelocity;
-    } else if (characterState === "ON_GROUND") {
-      let desiredVelocity = keyInput
-        .scale(onGroundSpeed)
-        .applyRotationQuaternion(characterOrientation);
+    }
+
+    // ---------- НА ЗЕМЛЕ ----------
+    if (characterState === "ON_GROUND") {
+      // тоже без поворота по кватерниону
+      const desiredVelocity = keyInput.scale(onGroundSpeed);
 
       let outputVelocity = characterController.calculateMovement(
         deltaTime,
@@ -114,42 +202,51 @@ export function createCharacterController(scene: Scene) {
         desiredVelocity,
         upWorld
       );
-      // Project velocity onto ground plane
+
+      // проекция по поверхности (как было)
       outputVelocity.subtractInPlace(supportInfo.averageSurfaceVelocity);
-      let inv1k = 1e-3;
+      const inv1k = 1e-3;
       if (outputVelocity.dot(upWorld) > inv1k) {
-        let velLen = outputVelocity.length();
+        const velLen = outputVelocity.length();
         outputVelocity.normalizeFromLength(velLen);
-        let horizLen = velLen / supportInfo.averageSurfaceNormal.dot(upWorld);
-        let c = supportInfo.averageSurfaceNormal.cross(outputVelocity);
+        const horizLen =
+          velLen / supportInfo.averageSurfaceNormal.dot(upWorld);
+        const c = supportInfo.averageSurfaceNormal.cross(outputVelocity);
         outputVelocity = c.cross(upWorld);
         outputVelocity.scaleInPlace(horizLen);
       }
       outputVelocity.addInPlace(supportInfo.averageSurfaceVelocity);
       return outputVelocity;
-    } else if (characterState === "START_JUMP") {
-      let u = Math.sqrt(2 * characterGravity.length() * jumpHeight);
-      let curRelVel = currentVelocity.dot(upWorld);
+    }
+
+    // ---------- НАЧАЛО ПРЫЖКА ----------
+    if (characterState === "START_JUMP") {
+      const upWorld = characterGravity.normalizeToNew().scale(-1.0);
+      const u = Math.sqrt(2 * characterGravity.length() * jumpHeight);
+      const curRelVel = currentVelocity.dot(upWorld);
       return currentVelocity.add(upWorld.scale(u - curRelVel));
     }
+
     return Vector3.Zero();
   };
 
-  // Sync visual mesh with physics controller every frame
+
+  // ---------- СИНХРОНИЗАЦИЯ КАПСУЛЫ С КОНТРОЛЛЕРОМ ----------
   scene.onBeforeRenderObservable.add(() => {
     displayCapsule.position.copyFrom(characterController.getPosition());
+    updateAnimation();
   });
 
-  // Update physics each frame
+  // ---------- ОБНОВЛЕНИЕ ФИЗИКИ ----------
   scene.onAfterPhysicsObservable?.add(() => {
     if (scene.deltaTime === undefined) return;
-    let dt = scene.deltaTime / 1000.0;
+    const dt = scene.deltaTime / 1000.0;
     if (dt === 0) return;
 
-    let down = new Vector3(0, -1, 0);
-    let support = characterController.checkSupport(dt, down);
+    const down = new Vector3(0, -1, 0);
+    const support = characterController.checkSupport(dt, down);
 
-    let desiredLinearVelocity = getDesiredVelocity(
+    const desiredLinearVelocity = getDesiredVelocity(
       dt,
       support,
       characterController.getVelocity()
@@ -158,10 +255,10 @@ export function createCharacterController(scene: Scene) {
     characterController.integrate(dt, support, characterGravity);
   });
 
-  // Keyboard input handler
+  // ---------- КЛАВИАТУРА ----------
   scene.onKeyboardObservable.add((kbInfo) => {
     const key = kbInfo.event.key;
-    
+
     switch (kbInfo.type) {
       case KeyboardEventTypes.KEYDOWN:
         if (key === "w" || key === "ArrowUp") {
@@ -175,18 +272,30 @@ export function createCharacterController(scene: Scene) {
         } else if (key === " ") {
           wantJump = true;
         }
+        updateFacingFromInput();
         break;
 
       case KeyboardEventTypes.KEYUP:
-        if (key === "w" || key === "s" || key === "ArrowUp" || key === "ArrowDown") {
+        if (
+          key === "w" ||
+          key === "s" ||
+          key === "ArrowUp" ||
+          key === "ArrowDown"
+        ) {
           keyInput.z = 0;
         }
-        if (key === "a" || key === "d" || key === "ArrowLeft" || key === "ArrowRight") {
+        if (
+          key === "a" ||
+          key === "d" ||
+          key === "ArrowLeft" ||
+          key === "ArrowRight"
+        ) {
           keyInput.x = 0;
         }
         if (key === " ") {
           wantJump = false;
         }
+        updateFacingFromInput();
         break;
     }
   });

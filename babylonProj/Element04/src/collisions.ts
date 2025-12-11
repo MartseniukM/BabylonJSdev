@@ -1,7 +1,7 @@
 import { SceneData } from "./interfaces";
 import { setText } from "./gui";
 
-// Лог только в консоль (например, для земли / кеглей)
+// общий лог
 const collideCB = (collision: {
   collider: { transformNode: { name: any } };
   collidedAgainst: { transformNode: { name: any } };
@@ -17,7 +17,7 @@ const collideCB = (collision: {
   );
 };
 
-// Этот коллбек — для шаров, пишет в GUI
+// лог шаров + вывод в GUI
 const collideBallCB = (collision: {
   collider: { transformNode: { name: any } };
   collidedAgainst: { transformNode: { name: any } };
@@ -44,16 +44,21 @@ export function setupCollisions(sceneData: SceneData): void {
   const FILTER_GROUP_BALL = 2;
   const FILTER_GROUP_PIN = 4;
 
-  // --- ground ---
-  if (sceneData.ground) {
-    const shape = sceneData.ground.shape;
-    const body = sceneData.ground.body;
+  // --- ground / grounds ---
+  const grounds: any[] = [];
+
+  if (sceneData.ground) grounds.push(sceneData.ground);
+  if (sceneData.grounds) grounds.push(...sceneData.grounds);
+
+  grounds.forEach((agg) => {
+    const shape = agg.shape;
+    const body = agg.body;
 
     shape!.filterMembershipMask = FILTER_GROUP_GROUND;
     shape!.filterCollideMask = FILTER_GROUP_BALL | FILTER_GROUP_PIN;
 
     body!.getCollisionObservable().add(collideCB);
-  }
+  });
 
   // --- balls ---
   if (sceneData.balls) {

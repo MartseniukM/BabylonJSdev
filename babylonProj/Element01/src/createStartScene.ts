@@ -107,7 +107,7 @@ function getMaterial(scene: Scene) {
   myMaterial.specularColor = new Color3(0.5, 0.6, 0.87);
   myMaterial.emissiveColor = new Color3(1, 0.4, 0.5);
   myMaterial.ambientColor = new Color3(0.23, 0.98, 0.53);
-  myMaterial.ambientTexture = new Texture("./../meshes01/assets/textures/grass.dds.jpg", scene);
+  myMaterial.ambientTexture = new Texture("./../Element01/assets/textures/grass.dds.jpg", scene);
   return myMaterial;
 }
 
