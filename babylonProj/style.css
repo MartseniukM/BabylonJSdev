@@ -1,0 +1,137 @@
+:root {
+  --card-bg: rgba(0, 0, 0, 0.55);
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.75);
+  --border: rgba(255, 255, 255, 0.25);
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background: #000;
+}
+
+/* Video background */
+.bg-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+/* Light dark overlay (optional, looks nicer; remove if you want pure video) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: -1;
+}
+
+/* Top bar */
+.topbar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+}
+
+.topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+.tab {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.tab:hover { border-color: var(--border); }
+
+.sep {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+/* Icons (prevents huge SVG) */
+.icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.icon:hover { border-color: var(--border); }
+
+.icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: #fff;
+}
+
+/* Center content */
+.center {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: min(720px, 92vw);
+  padding: 28px 28px 24px;
+  border-radius: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+}
+
+.card h1 {
+  margin: 0 0 10px;
+  font-size: 42px;
+}
+
+.card p {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.btn {
+  display: inline-block;
+  color: var(--text);
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.08);
+}
+
+.btn:hover {
+  background: rgba(255,255,255,0.14);
+}

@@ -1,0 +1,27 @@
+## AnimationGroup
+| Animation| 
+| --- |
+|Death|
+|Gun_Shoot|
+|HitReceive|
+|HitReceive_2|
+|Idle|
+|Idle_Gun|
+|Idle_Gun_Pointing|
+|Idle_Gun_Shoot|
+|Idle_Neutral|
+|Idle_Swprd|
+|Interact|
+|Kick_Left|
+|Kick_Right|
+|Punch_Left|
+|Punch_Right|
+|Roll|
+|Run|
+|Run_Back|
+|Run_Left|
+|Run_Right|
+|Run_Shoot|
+|Sword_Slash|
+|Walk|
+|Wave|

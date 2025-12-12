@@ -70,6 +70,8 @@ export function gui(scene: Scene): void {
   let advancedTexture: AdvancedDynamicTexture =
     AdvancedDynamicTexture.CreateFullscreenUI("myUI", true, scene);
 
+    advancedTexture.rootContainer.top = "80px";
+
   let button1: Button = createSceneButton(
     "restartButton",
     "Restart Scene",
