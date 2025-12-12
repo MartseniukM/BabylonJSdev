@@ -79,7 +79,7 @@ export function createSnakeGUI(scene: Scene) {
 
   restartBtn.onPointerClickObservable.add(() => {
     md?.snakeApi?.restart?.();
-    // score$ сам обновит текст, но на всякий случай:
+    
     if (md?.snakeApi?.getScore) {
       scoreText.text = `Score: ${md.snakeApi.getScore()}`;
     }

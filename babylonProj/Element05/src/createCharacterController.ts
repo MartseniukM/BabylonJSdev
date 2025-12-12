@@ -22,21 +22,21 @@ type ControllerOptions = {
 };
 
 export function createCharacterController(scene: Scene, options: ControllerOptions = {}) {
-  // ---------- СОСТОЯНИЕ ПЕРСОНАЖА ----------
+
   let characterState = "ON_GROUND";
   const inAirSpeed = 8.0;
   const onGroundSpeed = 10;
   const jumpHeight = 1.5;
   const characterGravity = new Vector3(0, -18, 0);
 
-  // ввод
+ 
   let keyInput = new Vector3(0, 0, 0);
   let wantJump = false;
 
-  // ориентация
+  
   let characterOrientation = Quaternion.Identity();
 
-  // ---------- ВИЗУАЛЬНАЯ КАПСУЛА ----------
+  
   const h = 1.8;
   const r = 0.6;
 
@@ -52,7 +52,7 @@ export function createCharacterController(scene: Scene, options: ControllerOptio
   capsuleMat.emissiveColor = new Color3(0.3, 0.1, 0.1);
   displayCapsule.material = capsuleMat;
 
-  // ---------- АНИМАЦИИ ФЕРМЕРА ----------
+ 
   let idleAnim: AnimationGroup | null = null;
   let walkAnim: AnimationGroup | null = null;
   let isMoving = false;
@@ -74,7 +74,7 @@ export function createCharacterController(scene: Scene, options: ControllerOptio
     }
   };
 
-  // ---------- ПОВОРОТ ПО НАПРАВЛЕНИЮ ДВИЖЕНИЯ ----------
+  
   const updateFacingFromInput = () => {
     if (keyInput.x === 0 && keyInput.z === 0) return;
 
@@ -85,7 +85,7 @@ export function createCharacterController(scene: Scene, options: ControllerOptio
     displayCapsule.rotationQuaternion = q;
   };
 
-  // ---------- ПОДГРУЖАЕМ ФЕРМЕРА ----------
+  
   SceneLoader.ImportMeshAsync("", "./assets/men/", "Farmer.gltf", scene)
     .then((result) => {
       const farmerRoot = result.meshes[0] as AbstractMesh;
@@ -110,14 +110,14 @@ export function createCharacterController(scene: Scene, options: ControllerOptio
         if (idleAnim) idleAnim.play(true);
       }
 
-      // прячем капсулу, показываем модель
+      
       displayCapsule.visibility = 0;
     })
     .catch((err) => {
       console.error("Failed to load Farmer.gltf", err);
     });
 
-  // ---------- PHYSICS CHARACTER CONTROLLER ----------
+  // PHYSICS CHARACTER CONTROLLER 
   const characterController = new PhysicsCharacterController(
     displayCapsule.position.clone(),
     { capsuleHeight: h, capsuleRadius: r },
@@ -210,13 +210,13 @@ export function createCharacterController(scene: Scene, options: ControllerOptio
     return Vector3.Zero();
   };
 
-  // ---------- СИНХРОНИЗАЦИЯ ----------
+
   scene.onBeforeRenderObservable.add(() => {
     displayCapsule.position.copyFrom(characterController.getPosition());
     updateAnimation();
   });
 
-  // ---------- ОБНОВЛЕНИЕ ФИЗИКИ ----------
+  
   scene.onAfterPhysicsObservable?.add(() => {
     if (scene.deltaTime === undefined) return;
     const dt = scene.deltaTime / 1000.0;
@@ -234,7 +234,7 @@ export function createCharacterController(scene: Scene, options: ControllerOptio
     characterController.integrate(dt, support, characterGravity);
   });
 
-  // ---------- КЛАВИАТУРА ----------
+  
   scene.onKeyboardObservable.add((kbInfo) => {
     const key = kbInfo.event.key.toLowerCase();
 

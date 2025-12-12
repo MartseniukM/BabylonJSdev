@@ -19,7 +19,7 @@ import {
   ShadowGenerator,
 } from "@babylonjs/core";
 
-// ---------- МУЗЫКА ----------
+
 function backgroundMusic(scene: Scene): Sound {
   const music = new Sound(
     "music",
@@ -28,12 +28,12 @@ function backgroundMusic(scene: Scene): Sound {
     null,
     {
       loop: true,
-      autoplay: false, // запустим сами после первого клика
+      autoplay: false, 
       volume: 1,
     }
   );
 
-  // после ПЕРВОГО клика по окну — включаем музыку
+
   window.addEventListener(
     "pointerdown",
     () => {
@@ -47,7 +47,7 @@ function backgroundMusic(scene: Scene): Sound {
   return music;
 }
 
-// ---------- ИГРОК ----------
+
 function importPlayer(scene: Scene, x: number, z: number) {
   const item: Promise<void | ISceneLoaderAsyncResult> =
     SceneLoader.ImportMeshAsync(
@@ -69,7 +69,7 @@ function importPlayer(scene: Scene, x: number, z: number) {
   return item;
 }
 
-// ---------- ДВЕ ПЛАТФОРМЫ + МОСТ ----------
+
 function createGround(scene: Scene) {
   const groundMaterial = new StandardMaterial("groundMaterial", scene);
   const groundTexture = new Texture("./assets/textures/wood.jpg", scene);
@@ -81,7 +81,7 @@ function createGround(scene: Scene) {
   groundMaterial.diffuseTexture.hasAlpha = true;
   groundMaterial.backFaceCulling = false;
 
-  // левая платформа
+
   const ground1 = MeshBuilder.CreateGround(
     "ground1",
     { width: 15, height: 15, subdivisions: 4 },
@@ -90,31 +90,27 @@ function createGround(scene: Scene) {
   ground1.material = groundMaterial;
   ground1.position.x = -10;
 
-  // правая платформа — клон
   const ground2 = ground1.clone("ground2") as Mesh;
   ground2.position.x = 10;
-
-  // мост между платформами
+ 
   const bridgeMat = new StandardMaterial("bridgeMat", scene);
-  bridgeMat.diffuseColor = new Color3(0.4, 0.25, 0.1); // коричневый
+  bridgeMat.diffuseColor = new Color3(0.4, 0.25, 0.1); 
 
   const bridge = MeshBuilder.CreateBox(
     "bridge",
     {
-      width: 10,   // длина по X (между островами)
-      height: 0.3, // толщина
-      depth: 4,    // ширина по Z
+      width: 10,   
+      height: 0.3, 
+      depth: 4,    
     },
     scene
   );
   bridge.material = bridgeMat;
   bridge.position.set(0, 0.15, 0);
 
-  // в SceneData ground один — вернём левую платформу
   return ground1;
 }
 
-// ---------- СВЕТ ----------
 function createHemisphericLight(scene: Scene) {
   const light = new HemisphericLight(
     "light",
@@ -139,7 +135,6 @@ function createSunLight(scene: Scene) {
   return sun;
 }
 
-// ---------- КАМЕРА ----------
 function createArcRotateCamera(scene: Scene) {
   const camAlpha = -Math.PI / 2;
   const camBeta = Math.PI / 2.5;
@@ -161,13 +156,10 @@ function createArcRotateCamera(scene: Scene) {
   camera.lowerBetaLimit = 0;
   camera.upperBetaLimit = Math.PI / 2.02;
 
-  // стрелками управляем персонажем, а не камерой
-  // camera.attachControl(true);
 
   return camera;
 }
 
-// ---------- СОЗДАНИЕ СЦЕНЫ ----------
 export default function createStartScene(engine: Engine): SceneData {
   const scene = new Scene(engine);
 
@@ -177,22 +169,18 @@ export default function createStartScene(engine: Engine): SceneData {
   const camera = createArcRotateCamera(scene);
   const audio = backgroundMusic(scene);
 
-  // спавним игрока на левой платформе
   const player = importPlayer(scene, -10, 0);
 
-  // -------- ТЕНИ --------
   const shadowGenerator = new ShadowGenerator(2048, sunLight);
   shadowGenerator.useBlurExponentialShadowMap = true;
   shadowGenerator.blurKernel = 64;
-  shadowGenerator.darkness = 0.7; // насыщённые тени
+  shadowGenerator.darkness = 0.7; 
 
-  // когда модель загрузится — добавим её как источник тени
   player.then((result) => {
     const character = result!.meshes[0] as AbstractMesh;
     shadowGenerator.addShadowCaster(character, true);
   });
 
-  // земля принимает тени
   ground.receiveShadows = true;
 
   const ground2 = scene.getMeshByName("ground2");

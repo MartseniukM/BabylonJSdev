@@ -16,10 +16,10 @@ document.body.appendChild(canvas);
 const engine = new Engine(canvas, true, {}, true);
 
 (async function main() {
-  // --- Scene A (Room) ---
+  // Scene A (Room) 
   const roomData = await createStartScene(engine);
 
-  // Character controller (фермер) + E interaction
+  // Character controller + E interaction
   createCharacterController(roomData.scene, {
     arcadeMesh: roomData.arcadeMachine,
     onInteract: () => {
@@ -30,16 +30,16 @@ const engine = new Engine(canvas, true, {}, true);
   // Room GUI (Press E prompt)
   const roomGuiApi = createRoomGUI(roomData.scene);
 
-  // --- Scene B (Snake) ---
+  //  Scene B (Snake) 
   const snakeData = await createRunScene(engine);
   const snakeGuiApi = createSnakeGUI(snakeData.scene);
 
-  // Back button => reload whole site (как ты хотел)
+  // Back button to reload whole site 
   snakeGuiApi.onBack = () => window.location.reload();
 
-  // --- Distance prompt update (show/hide) ---
+  //  Distance prompt update (show/hide) 
   roomData.scene.onBeforeRenderObservable.add(() => {
-    // фермерская капсула называется "CharacterDisplay"
+    
     const player = roomData.scene.getMeshByName("CharacterDisplay");
     if (!player) {
       roomGuiApi.showPressE(false);
@@ -50,7 +50,7 @@ const engine = new Engine(canvas, true, {}, true);
     roomGuiApi.showPressE(dist < 2.0);
   });
 
-  // --- Active scene render loop ---
+  // Active scene render loop 
   let activeScene = roomData.scene;
 
   engine.runRenderLoop(() => {

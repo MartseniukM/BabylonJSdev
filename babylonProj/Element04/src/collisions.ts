@@ -1,7 +1,7 @@
 import { SceneData } from "./interfaces";
 import { setText } from "./gui";
 
-// Лог только в консоль (например, для земли / кеглей)
+
 const collideCB = (collision: {
   collider: { transformNode: { name: any } };
   collidedAgainst: { transformNode: { name: any } };
@@ -17,7 +17,7 @@ const collideCB = (collision: {
   );
 };
 
-// Этот коллбек — для шаров, пишет в GUI
+
 const collideBallCB = (collision: {
   collider: { transformNode: { name: any } };
   collidedAgainst: { transformNode: { name: any } };

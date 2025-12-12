@@ -12,7 +12,7 @@ export interface RoomSceneData {
   hemiLight?: HemisphericLight;
   sunLight?: DirectionalLight;
 
-  // Arcade machine (нужна для distance check)
+  // Arcade machine (distance check)
   arcadeMachine: Mesh;
 }
 

@@ -13,11 +13,11 @@ import {
 } from "./keyActionManager";
 
 export default function createRunScene(runScene: SceneData) {
-  // actionManager и обработка клавиш
+  // actionManager
   runScene.scene.actionManager = new ActionManager(runScene.scene);
   keyActionManager(runScene.scene);
 
-  // SKYBOX из .env
+  // SKYBOX 
   const environmentTexture = new CubeTexture(
     "./assets/textures/industrialSky.env",
     runScene.scene
@@ -29,10 +29,7 @@ export default function createRunScene(runScene: SceneData) {
     0.1
   );
 
-  // музыку теперь НЕ останавливаем, она сама включится после клика
-
   runScene.scene.onBeforeRenderObservable.add(() => {
-    // --- переключение музыки по M ---
     if (getKeyDown() === 1 && (keyDownMap["m"] || keyDownMap["M"])) {
       keyDownHeld();
       if (runScene.audio.isPlaying) {
@@ -42,11 +39,9 @@ export default function createRunScene(runScene: SceneData) {
       }
     }
 
-    // --- движение персонажа ---
     runScene.player.then((result) => {
       const character: AbstractMesh = result!.meshes[0];
 
-      // скорость 0.05 (в 2 раза меньше, чем 0.1)
       if (keyDownMap["w"] || keyDownMap["ArrowUp"]) {
         character.position.x -= 0.05;
         character.rotation.y = (3 * Math.PI) / 2;
@@ -67,6 +62,5 @@ export default function createRunScene(runScene: SceneData) {
   });
 
   runScene.scene.onAfterRenderObservable.add(() => {
-    // сюда можно будет потом добавить эффекты
   });
 }

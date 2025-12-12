@@ -25,14 +25,14 @@ import {
 
 import { SceneData } from "./interfaces";
 
-// ------------------ LIGHT ------------------
+
 function createHemiLight(scene: Scene) {
   const light = new HemisphericLight("hemiLight", new Vector3(0, 1, 0), scene);
-  light.intensity = 0.4; // поменьше, чтобы тени были контрастней
+  light.intensity = 0.4; 
   return light;
 }
 
-// Солнце для теней
+
 function createSunLight(scene: Scene) {
   const sun = new DirectionalLight(
     "sunLight",
@@ -44,13 +44,13 @@ function createSunLight(scene: Scene) {
   return sun;
 }
 
-// ------------------ PLATFORMS (3 дорожки) ------------------
+//  PLATFORMS
 function createLanes(scene: Scene): PhysicsAggregate[] {
   const lanes: PhysicsAggregate[] = [];
 
   const laneWidth = 5;
   const laneLength = 18;
-  const laneZ = 3; // чуть вперёд от центра
+  const laneZ = 3; 
 
   const laneMat = new StandardMaterial("laneMat", scene);
   laneMat.diffuseTexture = new Texture("./assets/textures/wood.jpg", scene);
@@ -81,13 +81,13 @@ function createLanes(scene: Scene): PhysicsAggregate[] {
   return lanes;
 }
 
-// ------------------ DIVIDERS (перегородки между дорожками) ------------------
+// DIVIDERS 
 function createDividers(scene: Scene): PhysicsAggregate[] {
   const divs: PhysicsAggregate[] = [];
 
   const dividerMat = new StandardMaterial("dividerMat", scene);
   dividerMat.diffuseColor = new Color3(0.7, 0.7, 0.8);
-  dividerMat.specularColor = new Color3(0.9, 0.9, 1.0); // "серебристый" блеск
+  dividerMat.specularColor = new Color3(0.9, 0.9, 1.0); 
   dividerMat.emissiveColor = new Color3(0.1, 0.1, 0.15);
 
   const dividerPositionsX = [-3, 3];
@@ -120,7 +120,7 @@ function createDividers(scene: Scene): PhysicsAggregate[] {
   return divs;
 }
 
-// ------------------ WALLS (границы арены) ------------------
+// WALLS 
 function createWalls(scene: Scene): PhysicsAggregate[] {
   const walls: PhysicsAggregate[] = [];
 
@@ -128,15 +128,15 @@ function createWalls(scene: Scene): PhysicsAggregate[] {
   wallMat.diffuseColor = new Color3(0.5, 0.5, 0.55);
   wallMat.specularColor = new Color3(0.7, 0.7, 0.8);
 
-  const laneTotalWidth = 3 * 5 + 2 * 0.6 + 2; // немного запасов
-  const halfWidth = laneTotalWidth / 2; // слева/справа от центра
+  const laneTotalWidth = 3 * 5 + 2 * 0.6 + 2; 
+  const halfWidth = laneTotalWidth / 2; 
   const laneLength = 18;
   const laneZ = 3;
 
   const wallHeight = 2.5;
   const wallThickness = 0.4;
 
-  // Левая стена (по Z)
+  
   const leftWallMesh = MeshBuilder.CreateBox(
     "leftWall",
     {
@@ -157,7 +157,7 @@ function createWalls(scene: Scene): PhysicsAggregate[] {
     )
   );
 
-  // Правая стена (по Z)
+  
   const rightWallMesh = leftWallMesh.clone("rightWall") as Mesh;
   rightWallMesh.position.x = halfWidth;
   walls.push(
@@ -169,7 +169,7 @@ function createWalls(scene: Scene): PhysicsAggregate[] {
     )
   );
 
-  // Задняя стена (со стороны игрока)
+  
   const backWallMesh = MeshBuilder.CreateBox(
     "backWall",
     {
@@ -190,12 +190,12 @@ function createWalls(scene: Scene): PhysicsAggregate[] {
     )
   );
 
-  // ВПЕРЕДИ (за кеглями) стен НЕ ДЕЛАЕМ
+ 
 
   return walls;
 }
 
-// ------------------ CAMERA ------------------
+//  CAMERA 
 function createArcRotateCamera(scene: Scene): Camera {
   const camAlpha = -Math.PI / 2;
   const camBeta = Math.PI / 3;
@@ -214,7 +214,7 @@ function createArcRotateCamera(scene: Scene): Camera {
   return camera;
 }
 
-// ------------------ BALL (шар) ------------------
+//  BALL 
 function createBall(
   scene: Scene,
   name: string,
@@ -237,7 +237,7 @@ function createBall(
     ballMesh,
     PhysicsShapeType.SPHERE,
     {
-      mass: 4,         // тяжёлый шар
+      mass: 4,         
       restitution: 0.05,
       friction: 0.3,
     },
@@ -247,7 +247,7 @@ function createBall(
   return { aggregate: ballAggregate, mesh: ballMesh };
 }
 
-// ------------------ PINS (кегли СТАРОЙ ФОРМЫ) ------------------
+//  PINS 
 function createPinPrototype(scene: Scene): Mesh {
   const pin = MeshBuilder.CreateCylinder(
     "pinProto",
@@ -262,14 +262,14 @@ function createPinPrototype(scene: Scene): Mesh {
   pin.position.y = 0.6;
 
   const pinMat = new StandardMaterial("pinMat", scene);
-  pinMat.diffuseColor = new Color3(0.9, 0.1, 0.1); // красные
+  pinMat.diffuseColor = new Color3(0.9, 0.1, 0.1); 
   pinMat.emissiveColor = new Color3(0.3, 0.0, 0.0);
   pin.material = pinMat;
 
   return pin;
 }
 
-// один треугольник кеглей для одной дорожки
+
 function createPinsForLane(
   scene: Scene,
   laneCenterX: number,
@@ -277,25 +277,25 @@ function createPinsForLane(
 ): PhysicsAggregate[] {
   const pinsAgg: PhysicsAggregate[] = [];
 
-  // Острый угол ближе к игроку
-  const baseZ = 6;       // позиция вершины треугольника
+  
+  const baseZ = 6;       
   const dz = 0.7;
   const dx = 0.4;
 
   const layoutLocal: Vector3[] = [
-    // ряд 1 — вершина (ближе к игроку)
+    
     new Vector3(0, 0, baseZ),
 
-    // ряд 2
+    
     new Vector3(-dx, 0, baseZ + dz),
     new Vector3(dx, 0, baseZ + dz),
 
-    // ряд 3
+  
     new Vector3(-2 * dx, 0, baseZ + 2 * dz),
     new Vector3(0, 0, baseZ + 2 * dz),
     new Vector3(2 * dx, 0, baseZ + 2 * dz),
 
-    // ряд 4
+    
     new Vector3(-3 * dx, 0, baseZ + 3 * dz),
     new Vector3(-dx, 0, baseZ + 3 * dz),
     new Vector3(dx, 0, baseZ + 3 * dz),
@@ -327,7 +327,7 @@ function createPinsForLane(
 
     pinAgg.body.setCollisionCallbackEnabled(true);
 
-    // pins collide with each other + с шаром, стенами и дорожкой
+    // pins collide with each other 
     pinAgg.shape.filterMembershipMask = 4;
     pinAgg.shape.filterCollideMask = 4 | 1 | 2 | 8 | 16;
 
@@ -351,7 +351,7 @@ function createAllPins(scene: Scene): { pinsAgg: PhysicsAggregate[]; pinMeshes: 
     const lanePins = createPinsForLane(scene, x, proto);
     allAgg.push(...lanePins);
 
-    // собрать все меши для теней
+    
     lanePins.forEach((agg) => {
       if (agg.transformNode && agg.transformNode instanceof Mesh) {
         allMeshes.push(agg.transformNode as Mesh);
@@ -362,7 +362,7 @@ function createAllPins(scene: Scene): { pinsAgg: PhysicsAggregate[]; pinMeshes: 
   return { pinsAgg: allAgg, pinMeshes: allMeshes };
 }
 
-// ------------------ TREES / GLTF (ТОЛЬКО ПО КРАЯМ) ------------------
+// TREES 
 function addAssets(scene: Scene) {
   const assetsManager = new AssetsManager(scene);
 
@@ -418,7 +418,7 @@ function addAssets(scene: Scene) {
   return assetsManager;
 }
 
-// ------------------ SKYBOX ------------------
+//SKYBOX
 function createSkybox(scene: Scene) {
   const skybox = MeshBuilder.CreateBox("skyBox", { size: 1000 }, scene);
 
@@ -439,7 +439,7 @@ function createSkybox(scene: Scene) {
   (skybox as any).infiniteDistance = true;
 }
 
-// ------------------ START SCENE ------------------
+//  START SCENE 
 export default async function createStartScene(
   engine: Engine
 ): Promise<SceneData> {
@@ -461,7 +461,6 @@ export default async function createStartScene(
 
   const camera = createArcRotateCamera(scene);
 
-  // --- шары трёх цветов на трёх дорожках ---
   const ballsAgg: PhysicsAggregate[] = [];
   const shadowCasters: Mesh[] = [];
 
@@ -492,7 +491,7 @@ export default async function createStartScene(
   ballsAgg.push(ball3.aggregate);
   shadowCasters.push(ball3.mesh);
 
-  // --- кегли на трёх дорожках ---
+ 
   const { pinsAgg, pinMeshes } = createAllPins(scene);
   pinMeshes.forEach((m) => shadowCasters.push(m));
 
@@ -501,7 +500,7 @@ export default async function createStartScene(
 
   createSkybox(scene);
 
-  // --- ТЕНИ ---
+ 
   const shadowGenerator = new ShadowGenerator(2048, sunLight);
   shadowGenerator.useBlurExponentialShadowMap = true;
   shadowGenerator.blurKernel = 64;
@@ -509,7 +508,7 @@ export default async function createStartScene(
 
   shadowCasters.forEach((m) => shadowGenerator.addShadowCaster(m, true));
 
-  // все платформы принимают тени
+ 
   laneAggregates.forEach((agg) => {
     const m = agg.transformNode as Mesh;
     m.receiveShadows = true;

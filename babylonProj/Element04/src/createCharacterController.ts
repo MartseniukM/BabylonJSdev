@@ -1,4 +1,4 @@
-// createCharacterController.ts
+
 import "@babylonjs/loaders/glTF/2.0";
 
 import {
@@ -17,22 +17,22 @@ import {
 } from "@babylonjs/core";
 
 export function createCharacterController(scene: Scene) {
-  // ---------- СОСТОЯНИЕ ПЕРСОНАЖА ----------
+ 
   let characterState = "ON_GROUND";
   const inAirSpeed = 8.0;
   const onGroundSpeed = 10;
   const jumpHeight = 1.5;
   const characterGravity = new Vector3(0, -18, 0);
 
-  // ввод
+  
   let keyInput = new Vector3(0, 0, 0);
   let wantJump = false;
 
-  // ориентация
+  
   let characterOrientation = Quaternion.Identity();
   let forwardLocalSpace = new Vector3(0, 0, 1);
 
-  // ---------- ВИЗУАЛЬНАЯ КАПСУЛА ----------
+  
   const h = 1.8;
   const r = 0.6;
 
@@ -50,7 +50,7 @@ export function createCharacterController(scene: Scene) {
 
   console.log("Capsule initial position:", displayCapsule.position);
 
-  // ---------- АНИМАЦИИ ФЕРМЕРА ----------
+  
   let idleAnim: AnimationGroup | null = null;
   let walkAnim: AnimationGroup | null = null;
   let isMoving = false;
@@ -72,19 +72,19 @@ export function createCharacterController(scene: Scene) {
     }
   };
 
-  // ---------- ПОВОРОТ ПО НАПРАВЛЕНИЮ ДВИЖЕНИЯ ----------
+  
   const updateFacingFromInput = () => {
     if (keyInput.x === 0 && keyInput.z === 0) return;
 
-    // угол: X — вбок, Z — вперёд/назад
-    const angle = Math.atan2(keyInput.x, keyInput.z); // радианы
+    
+    const angle = Math.atan2(keyInput.x, keyInput.z); 
     const q = Quaternion.FromEulerAngles(0, angle, 0);
 
     characterOrientation = q;
     displayCapsule.rotationQuaternion = q;
   };
 
-  // ---------- ПОДГРУЖАЕМ ФЕРМЕРА ----------
+  
   SceneLoader.ImportMeshAsync("", "./assets/men/", "Farmer.gltf", scene)
     .then((result) => {
       console.log("Farmer loaded, meshes:", result.meshes);
@@ -126,7 +126,7 @@ export function createCharacterController(scene: Scene) {
       console.error("Failed to load Farmer.gltf", err);
     });
 
-  // ---------- PHYSICS CHARACTER CONTROLLER ----------
+  
   const characterController = new PhysicsCharacterController(
     displayCapsule.position.clone(),
     { capsuleHeight: h, capsuleRadius: r },
@@ -142,7 +142,7 @@ export function createCharacterController(scene: Scene) {
     },
     currentVelocity: Vector3
   ): Vector3 {
-    // --- обновляем состояние (как раньше) ---
+    
     if (
       characterState === "ON_GROUND" &&
       supportInfo.supportedState !== CharacterSupportedState.SUPPORTED
@@ -155,20 +155,20 @@ export function createCharacterController(scene: Scene) {
       characterState = "ON_GROUND";
     }
 
-    // прыжок
+    
     if (characterState === "ON_GROUND" && wantJump) {
       characterState = "START_JUMP";
     } else if (characterState === "START_JUMP") {
       characterState = "IN_AIR";
     }
 
-    // мировой «верх» и «вперёд»
+    
     const upWorld = characterGravity.normalizeToNew().scale(-1.0);
-    const forwardWorld = new Vector3(0, 0, 1); // просто ось Z
+    const forwardWorld = new Vector3(0, 0, 1); 
 
-    // ---------- В ВОЗДУХЕ ----------
+    
     if (characterState === "IN_AIR") {
-      // Больше НЕ крутим вектор скоростью по ориентации
+      
       const desiredVelocity = keyInput.scale(inAirSpeed);
 
       let outputVelocity = characterController.calculateMovement(
@@ -181,16 +181,16 @@ export function createCharacterController(scene: Scene) {
         upWorld
       );
 
-      // сохраняем вертикальную составляющую и добавляем гравитацию
+      
       outputVelocity.addInPlace(upWorld.scale(-outputVelocity.dot(upWorld)));
       outputVelocity.addInPlace(upWorld.scale(currentVelocity.dot(upWorld)));
       outputVelocity.addInPlace(characterGravity.scale(deltaTime));
       return outputVelocity;
     }
 
-    // ---------- НА ЗЕМЛЕ ----------
+    
     if (characterState === "ON_GROUND") {
-      // тоже без поворота по кватерниону
+      
       const desiredVelocity = keyInput.scale(onGroundSpeed);
 
       let outputVelocity = characterController.calculateMovement(
@@ -203,7 +203,7 @@ export function createCharacterController(scene: Scene) {
         upWorld
       );
 
-      // проекция по поверхности (как было)
+      
       outputVelocity.subtractInPlace(supportInfo.averageSurfaceVelocity);
       const inv1k = 1e-3;
       if (outputVelocity.dot(upWorld) > inv1k) {
@@ -219,7 +219,7 @@ export function createCharacterController(scene: Scene) {
       return outputVelocity;
     }
 
-    // ---------- НАЧАЛО ПРЫЖКА ----------
+    
     if (characterState === "START_JUMP") {
       const upWorld = characterGravity.normalizeToNew().scale(-1.0);
       const u = Math.sqrt(2 * characterGravity.length() * jumpHeight);
@@ -231,13 +231,13 @@ export function createCharacterController(scene: Scene) {
   };
 
 
-  // ---------- СИНХРОНИЗАЦИЯ КАПСУЛЫ С КОНТРОЛЛЕРОМ ----------
+  
   scene.onBeforeRenderObservable.add(() => {
     displayCapsule.position.copyFrom(characterController.getPosition());
     updateAnimation();
   });
 
-  // ---------- ОБНОВЛЕНИЕ ФИЗИКИ ----------
+  
   scene.onAfterPhysicsObservable?.add(() => {
     if (scene.deltaTime === undefined) return;
     const dt = scene.deltaTime / 1000.0;
@@ -255,7 +255,7 @@ export function createCharacterController(scene: Scene) {
     characterController.integrate(dt, support, characterGravity);
   });
 
-  // ---------- КЛАВИАТУРА ----------
+  
   scene.onKeyboardObservable.add((kbInfo) => {
     const key = kbInfo.event.key;
 
